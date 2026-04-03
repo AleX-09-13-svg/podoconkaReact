@@ -1,14 +1,15 @@
 {
-  "name": "my-app",
+  "name": "react-ui-starter",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Reusable React UI starter powered by Vite, TypeScript, Tailwind CSS v4, and shadcn/ui.",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite -c vite.config.mjs --configLoader native",
     "typecheck": "tsc -b",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build -c vite.config.mjs --configLoader native",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview -c vite.config.mjs --configLoader native"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
