@@ -1,73 +1,51 @@
-# React + TypeScript + Vite
+# React/Vite UI Base
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Reusable UI template built with Vite, React, TypeScript, Tailwind CSS v4, and shadcn/ui.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Vite 8
+- React 19
+- TypeScript 5
+- Tailwind CSS v4 via `@tailwindcss/vite`
+- shadcn/ui with `radix-vega` style
+- ESLint 9
+- Path alias `@/* -> src/*`
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `npm run dev` - start the Vite dev server
+- `npm run typecheck` - run TypeScript project references
+- `npm run build` - type-check and build for production
+- `npm run lint` - run ESLint
+- `npm run preview` - preview the production build
 
-## Expanding the ESLint configuration
+## Project Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Vite alias is configured in `vite.config.ts`
+- TypeScript alias is configured in `tsconfig.json` and inherited by app/node configs
+- shadcn/ui aliases are configured in `components.json`
+- Tailwind theme tokens and dark mode variant live in `src/index.css`
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## VS Code
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Workspace settings are stored in `.vscode/settings.json`.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This template ignores unknown CSS at-rules so Tailwind v4 directives like `@theme` and `@custom-variant` are not flagged by the default CSS validator.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Recommended extension:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `Tailwind CSS IntelliSense` (`bradlc.vscode-tailwindcss`)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## shadcn/ui
+
+Generated UI components live in `src/components/ui`.
+
+This template keeps variant helpers in separate files when needed so ESLint fast-refresh rules stay compatible with component exports.
+
+## Reusing This Template
+
+1. Copy the project or create a new repository from it.
+2. Run `npm install`.
+3. Start development with `npm run dev`.
+4. Add new shadcn/ui components as needed and keep imports using `@/`.
