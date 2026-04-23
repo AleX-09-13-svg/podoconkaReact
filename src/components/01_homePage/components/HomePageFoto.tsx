@@ -44,7 +44,10 @@ export default function HomePageFotos() {
           className="w-full"
         ></HomePageFoto>
         <div className="mt-auto self-center px-4">
-          <LandingActionButton className="w-full" textForButton="Создать заказ">
+          <LandingActionButton
+            className="w-full"
+            textForButton="Создать заказ"
+          >
             создать заказ
           </LandingActionButton>
         </div>

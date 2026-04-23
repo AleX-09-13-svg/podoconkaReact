@@ -1,30 +1,35 @@
-import { cn } from '../../lib/utils'
 import { useState } from 'react'
-import type { AppPage } from '../../types/appPage'
+import { NavLink } from 'react-router-dom'
+import { cn } from '../../lib/utils'
+import { appPagePathByPage } from '../../config/appPageRoutes'
 
-type MenuStubProps = {
-  activePage: AppPage
+type BurgerMenuButtonProps = {
   className?: string
-  onNavigate: (page: AppPage) => void
 }
 
-export default function MenuStub({
-  activePage,
-  className,
-  onNavigate,
-}: MenuStubProps) {
-  const [open, setOpen] = useState(false)
+const menuItems = [
+  {
+    label: 'Главная',
+    path: appPagePathByPage.home,
+  },
+  {
+    label: 'Калькулятор',
+    path: appPagePathByPage.calculator,
+  },
+  {
+    label: 'Каталог',
+    path: appPagePathByPage.catalog,
+  },
+  {
+    label: 'Заказ',
+    path: appPagePathByPage.order,
+  },
+] as const
 
-  const menuItems: Array<{
-    label: string
-    page: AppPage
-  }> = [
-    { label: 'Главная', page: 'home' },
-    { label: 'Калькулятор', page: 'calculator' },
-    { label: 'Камень', page: 'catalog' },
-    { label: 'Корзина', page: 'order' },
-    { label: 'Контакты', page: 'home' },
-  ]
+export default function BurgerMenuButton({
+  className,
+}: BurgerMenuButtonProps) {
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="relative m-4">
@@ -32,7 +37,7 @@ export default function MenuStub({
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        aria-label="Открыть меню"
+        aria-label="Open menu"
         className={cn(
           'flex aspect-square min-w-[5rem] items-center justify-center rounded-[1rem] border-[5px] border-[#7e7368] bg-white shadow-[0_12px_24px_rgba(126,115,104,0.12)] transition hover:bg-black/10',
           className,
@@ -49,21 +54,21 @@ export default function MenuStub({
         <div className="absolute right-0 top-[calc(100%+12px)] z-50 w-[220px] rounded-[1.75rem] border-[4px] border-[#7e7368] bg-white px-4 py-6 shadow-[0_18px_32px_rgba(126,115,104,0.18)]">
           <div className="flex flex-col items-center gap-3">
             {menuItems.map((item) => (
-              <button
-                key={`${item.label}-${item.page}`}
-                type="button"
-                onClick={() => {
-                  onNavigate(item.page)
-                  setOpen(false)
-                }}
-                className={cn(
-                  'w-full rounded-xl px-3 py-2 text-center text-[clamp(20px,2.1vw,24px)] leading-none text-[#8f7774] transition-colors hover:bg-[#f4ede8]',
-                  activePage === item.page &&
-                    'bg-[#f4ede8] text-[#6f5c5a]',
-                )}
+              <NavLink
+                key={`${item.label}-${item.path}`}
+                to={item.path}
+                end={item.path === '/'}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    'w-full rounded-xl px-3 py-2 text-center text-[clamp(20px,2.1vw,24px)] leading-none text-[#8f7774] transition-colors hover:bg-[#f4ede8]',
+                    isActive &&
+                      'bg-[#f4ede8] text-[#6f5c5a]',
+                  )
+                }
               >
                 {item.label}
-              </button>
+              </NavLink>
             ))}
           </div>
         </div>
