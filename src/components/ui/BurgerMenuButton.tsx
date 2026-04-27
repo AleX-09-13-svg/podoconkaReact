@@ -21,7 +21,7 @@ const menuItems = [
     path: appPagePathByPage.catalog,
   },
   {
-    label: 'Заказ',
+    label: 'Корзина',
     path: appPagePathByPage.order,
   },
 ] as const

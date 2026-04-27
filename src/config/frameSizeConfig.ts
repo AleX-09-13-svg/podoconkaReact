@@ -1,7 +1,6 @@
 import heroImage from '../assets/home2.webp'
 import calculatorImage from '../assets/calculator2.webp'
-import catalogImage from '../assets/catalog1.png'
-import orderImage from '../assets/order1.png'
+import orderImage from '../assets/order2.webp'
 
 type Grid = {
   cols: number
@@ -64,20 +63,16 @@ const frameSizeConfig: FrameConfigMap = {
     width: 'clamp(280px, 82vw, 420px)',
     grid: { cols: 4, rows: 20 },
     background: {
-      color: '#ffffff',
-      image: `url(${catalogImage})`,
-      position: 'center',
-      repeat: 'no-repeat',
-      size: 'cover',
+      color: '#4f6370',
     },
   },
   orderPage: {
     x: 320,
-    y: 945,
+    y: 1315,
     width: 'clamp(280px, 82vw, 420px)',
-    grid: { cols: 4, rows: 2 },
+    grid: { cols: 4, rows: 6 },
     background: {
-      color: '#ffffff',
+      color: '#f5f1eb',
       image: `url(${orderImage})`,
       position: 'center',
       repeat: 'no-repeat',

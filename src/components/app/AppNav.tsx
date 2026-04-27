@@ -16,7 +16,7 @@ const navLinkClassName = ({ isActive }: NavLinkState) =>
 
 export default function AppNav() {
   return (
-    <div className="mx-auto flex w-[min(92vw,720px)] flex-wrap gap-2 pb-4">
+    <div className="mx-auto flex justify-center w-[min(92vw,720px)] flex-wrap gap-2 pb-4 [font-family:system-ui]">
       {appRoutes.map((page) => (
         <NavLink
           key={page.page}

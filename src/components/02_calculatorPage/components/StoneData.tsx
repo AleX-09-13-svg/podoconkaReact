@@ -1,12 +1,12 @@
-import type { ChangeEventHandler } from 'react'
+import type { SelectHTMLAttributes } from 'react'
 import { cn } from '../../../lib/utils'
 
-type StoneDataProps = {
+type StoneDataProps = Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  'className'
+> & {
   className?: string
   label?: string
-  name?: string
-  value?: string
-  onChange?: ChangeEventHandler<HTMLSelectElement>
   options?: string[]
   placeholder?: string
 }
@@ -15,10 +15,11 @@ export default function StoneData({
   className,
   label = 'камень',
   name = 'stone',
-  value = '',
+  value,
   onChange,
   options = ['Акрил', 'Мрамор', 'Гранит'],
   placeholder = 'выбрать',
+  ...selectProps
 }: StoneDataProps) {
   return (
     <label
@@ -38,6 +39,7 @@ export default function StoneData({
         value={value}
         onChange={onChange}
         className="h-[clamp(44px,13vw,58px)] w-[clamp(130px,40vw,170px)] appearance-none rounded-full border-[3px] border-[#526474] bg-white px-5 text-center text-[clamp(18px,4vw,28px)] text-[#526474] outline-none transition-colors focus:border-[#41525f]"
+        {...selectProps}
       >
         <option value="">
           {placeholder}

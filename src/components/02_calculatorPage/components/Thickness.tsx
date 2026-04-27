@@ -1,13 +1,13 @@
 import { ChevronDown } from 'lucide-react'
-import type { ChangeEventHandler } from 'react'
+import type { SelectHTMLAttributes } from 'react'
 import { cn } from '../../../lib/utils'
 
-type ThicknessProps = {
+type ThicknessProps = Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  'className'
+> & {
   className?: string
   label?: string
-  name?: string
-  value?: string
-  onChange?: ChangeEventHandler<HTMLSelectElement>
   options?: string[]
   placeholder?: string
 }
@@ -16,10 +16,11 @@ export default function Thickness({
   className,
   label = 'Толщина:',
   name = 'thickness',
-  value = '',
+  value,
   onChange,
   options = ['20 мм', '30 мм', '40 мм'],
   placeholder = 'Выбрать',
+  ...selectProps
 }: ThicknessProps) {
   return (
     <label
@@ -38,6 +39,7 @@ export default function Thickness({
           value={value}
           onChange={onChange}
           className="h-[clamp(44px,13vw,58px)] w-[clamp(120px,38vw,180px)] appearance-none rounded-full border-[3px] border-[#526474] bg-white px-4 pr-11 text-[clamp(18px,4vw,28px)] text-[#526474] outline-none transition-colors focus:border-[#41525f]"
+          {...selectProps}
         >
           <option value="">
             {placeholder}
