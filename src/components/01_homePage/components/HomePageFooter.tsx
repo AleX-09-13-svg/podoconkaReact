@@ -1,5 +1,3 @@
-import ContactBar from '@/components/ui/ContactBar'
-
 export default function HomePageFooter() {
   const yandexMapUrl =
     'https://yandex.ru/map-widget/v1/?ll=37.548108%2C55.344491&pt=37.548108,55.344491,pm2rdm&z=16'
@@ -9,9 +7,9 @@ export default function HomePageFooter() {
   return (
     <div className="col-[1/5] row-[6/8] m-5 flex flex-col gap-6 self-end justify-self-stretch">
       <p className="text-center text-[clamp(14px,4.6vw,32px)] text-white">
-        Контакты :
+        Мы находимся:
       </p>
-      <ContactBar />
+
       <div className="relative overflow-hidden rounded-2xl">
         <a
           href={yandexOpenUrl}
