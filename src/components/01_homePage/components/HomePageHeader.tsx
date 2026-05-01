@@ -13,9 +13,7 @@ export default function HomePageHeader() {
         <LandingActionButton
           className="w-full"
           textForButton="Позвонить"
-          onClick={() => {
-            window.location.href = 'tel:+79647735543'
-          }}
+          href="tel:+79647735543"
         />
       </div>
     </div>
