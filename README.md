@@ -1,4 +1,4 @@
-﻿# React UI Starter
+# React UI Starter
 
 Reusable starter for interface-heavy React projects built with Vite, TypeScript, Tailwind CSS v4, and shadcn/ui.
 
@@ -107,3 +107,27 @@ Reusable starter for interface-heavy React projects built with Vite, TypeScript,
 - Установите дополнительные компоненты shadcn/ui по мере необходимости.
 - Замените временные ассеты на брендинг вашего проекта.
 - Если сборка странно ведёт себя на Windows, проверьте проект в пути, где используются только латинские символы.
+
+## EmailJS за 5 минут
+
+1. Зарегистрируйтесь на [EmailJS](https://www.emailjs.com/) и войдите в аккаунт.
+2. В `Email Services` подключите почтовый сервис (например, Gmail) и скопируйте `Service ID`.
+3. В `Email Templates` создайте шаблон и добавьте в него переменные:
+   - `{{user_name}}`
+   - `{{user_phone}}`
+   - `{{user_email}}`
+   - `{{message}}`
+   Затем скопируйте `Template ID`.
+4. В `Account` -> `General` скопируйте `Public Key`.
+5. В корне проекта создайте `/.env.local` (рядом с `package.json`) и добавьте:
+
+```env
+VITE_EMAILJS_SERVICE_ID=your_service_id
+VITE_EMAILJS_TEMPLATE_ID=your_template_id
+VITE_EMAILJS_PUBLIC_KEY=your_public_key
+```
+
+6. Перезапустите dev-сервер: `npm run dev`.
+7. Откройте страницу формы, заполните поля и отправьте заявку.
+
+Если все настроено верно, форма отправит письмо на email пользователя, который указан в поле `Почта`.

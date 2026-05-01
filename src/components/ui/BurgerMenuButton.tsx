@@ -51,7 +51,7 @@ export default function BurgerMenuButton({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+12px)] z-50 w-[220px] rounded-[1.75rem] border-[4px] border-[#7e7368] bg-white px-4 py-6 shadow-[0_18px_32px_rgba(126,115,104,0.18)]">
+        <div className="absolute top-[calc(100%+12px)] right-0 z-50 w-[220px] rounded-[1.75rem] border-[4px] border-[#7e7368] bg-white px-4 py-6 shadow-[0_18px_32px_rgba(126,115,104,0.18)]">
           <div className="flex flex-col items-center gap-3">
             {menuItems.map((item) => (
               <NavLink

@@ -1,6 +1,6 @@
 const layoutDebugConfig = {
   showFrameBorder: false,
-  showGridCells:true,
+  showGridCells: false,
 }
 
 export default layoutDebugConfig

@@ -1,13 +1,16 @@
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import emailjs from '@emailjs/browser'
 import {
   type FieldError,
   type SubmitHandler,
   useForm,
 } from 'react-hook-form'
 
-import LandingActionButton from '../../ui/LandingActionButton'
+import { useAppData } from '../../../context/AppDataContext'
+import { calculateStoneCut } from '../../../lib/guillotinePacking'
 import { cn } from '../../../lib/utils'
+import LandingActionButton from '../../ui/LandingActionButton'
 
 type OrderRequestFormValues = {
   phone: string
@@ -22,14 +25,11 @@ type FieldShellProps = {
   className?: string
 }
 
-const defaultMessage =
-  'Прошу выставить счет на подоконники 200X200X25-200. GRANDEX SOIL D-320 183200 РУБ.'
-
 const inputClassName =
   'h-[54px] w-full rounded-[1.35rem] border-2 border-[#ddd5ce] bg-[#ddd5ce] px-5 text-[clamp(18px,5vw,28px)] leading-none text-white outline-none transition-colors placeholder:text-white/95 focus:border-[#c7873b] focus:bg-[#d1c8bf]'
 
 const textareaClassName =
-  'min-h-[308px] w-full resize-none rounded-[1.35rem] border-2 border-[#ddd5ce] bg-[#ddd5ce] px-4 py-4 text-[clamp(14px,3.8vw,21px)] font-normal  leading-[1.08] text-[#546474] outline-none transition-colors placeholder:text-[#546474]/50 focus:border-[#c7873b] focus:bg-[#d1c8bf] [font-family:system-ui]'
+  'min-h-[308px] w-full resize-none rounded-[1.35rem] border-2 border-[#ddd5ce] bg-[#ddd5ce] px-4 py-4 text-[clamp(14px,3.8vw,21px)] font-normal leading-[1.08] text-[#546474] outline-none transition-colors placeholder:text-[#546474]/50 focus:border-[#c7873b] focus:bg-[#d1c8bf] [font-family:system-ui]'
 
 function FieldShell({
   children,
@@ -41,7 +41,7 @@ function FieldShell({
       {children}
       <p
         className={cn(
-          'min-h-[1.1rem] px-2 text-[12px] leading-none font-semibold text-[#b4574b]',
+          'min-h-[1.1rem] px-2 text-[12px] font-semibold leading-none text-[#b4574b]',
           !error && 'invisible',
         )}
       >
@@ -51,15 +51,89 @@ function FieldShell({
   )
 }
 
+function getStoneDisplayName(name: string) {
+  const grandexIndex = name
+    .toLowerCase()
+    .indexOf('grandex')
+
+  return grandexIndex >= 0
+    ? name.slice(grandexIndex)
+    : name
+}
+
+function getNumericValue(value: string) {
+  return value.replace(/[^\d.,]/g, '')
+}
+
+function getNumberValue(value: string) {
+  return Number(getNumericValue(value).replace(',', '.'))
+}
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: 0,
+  }).format(price)
+}
+
 export default function OrderRequestForm() {
   const [submittedEmail, setSubmittedEmail] =
     useState<string | null>(null)
+  const [isSubmittingEmail, setIsSubmittingEmail] =
+    useState(false)
+  const [submitError, setSubmitError] = useState<
+    string | null
+  >(null)
+  const { selectedStone, calculatorFormValues } =
+    useAppData()
+  const { length, width, thickness, count } =
+    calculatorFormValues
+  const serviceId = import.meta.env
+    .VITE_EMAILJS_SERVICE_ID
+  const templateId = import.meta.env
+    .VITE_EMAILJS_TEMPLATE_ID
+  const publicKey = import.meta.env
+    .VITE_EMAILJS_PUBLIC_KEY
+  const defaultMessage = useMemo(() => {
+    const sillDescription =
+      length && width && thickness && count
+        ? `${getNumericValue(length)}x${getNumericValue(width)}x${getNumericValue(thickness)}-${getNumericValue(count)} шт.`
+        : 'параметры не заданы'
+    const stoneName = selectedStone
+      ? getStoneDisplayName(selectedStone.name)
+      : 'камень не выбран'
+    const result = selectedStone
+      ? calculateStoneCut({
+          partLength: getNumberValue(length),
+          partWidth: getNumberValue(width),
+          count: getNumberValue(count),
+          pricePerSheet: selectedStone.pricePerSheet,
+          config: {
+            sheetLength: 3660,
+            sheetWidth: 750,
+            edgeGap: 10,
+            partGap: 5,
+            edgeBandWidth: getNumberValue(thickness),
+            includeEdgeBands: true,
+            allowRotate: true,
+            preferMinimalUsedLength: true,
+            purchaseStepQuarters: 1,
+            maxQuarters: 40,
+          },
+        })
+      : null
+    const priceText = result
+      ? `${formatPrice(result.totalPrice)} руб.`
+      : 'стоимость не рассчитана'
+
+    return `Прошу выставить счет на подоконники ${sillDescription}. ${stoneName} ${priceText}`
+  }, [count, length, selectedStone, thickness, width])
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    setValue,
+    formState: { dirtyFields, errors },
   } = useForm<OrderRequestFormValues>({
     mode: 'onTouched',
     defaultValues: {
@@ -70,27 +144,65 @@ export default function OrderRequestForm() {
     },
   })
 
+  useEffect(() => {
+    if (!dirtyFields.message) {
+      setValue('message', defaultMessage)
+    }
+  }, [defaultMessage, dirtyFields.message, setValue])
+
   const onSubmit: SubmitHandler<
     OrderRequestFormValues
-  > = (data) => {
-    console.info(
-      'Order request form submit',
-      data,
-    )
-    setSubmittedEmail(data.email)
-    reset({
-      phone: '',
-      fullName: '',
-      email: '',
-      message: defaultMessage,
-    })
+  > = async (data) => {
+    setSubmitError(null)
+
+    if (
+      !serviceId ||
+      !templateId ||
+      !publicKey
+    ) {
+      setSubmitError(
+        'EmailJS не настроен. Добавьте VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID и VITE_EMAILJS_PUBLIC_KEY в .env.local.',
+      )
+      return
+    }
+
+    setIsSubmittingEmail(true)
+    try {
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          user_name: data.fullName,
+          user_phone: data.phone,
+          user_email: data.email,
+          message: data.message,
+        },
+        {
+          publicKey,
+        },
+      )
+      setSubmittedEmail(data.email)
+      reset({
+        phone: '',
+        fullName: '',
+        email: '',
+        message: defaultMessage,
+      })
+    } catch (error) {
+      console.error('Email send failed', error)
+      setSubmitError(
+        'Не удалось отправить письмо. Проверьте настройки EmailJS и попробуйте снова.',
+      )
+    } finally {
+      setIsSubmittingEmail(false)
+    }
   }
 
   return (
     <form
       noValidate
       onSubmit={handleSubmit(onSubmit)}
-      className="flex h-full flex-col"
+      className="flex h-full flex-col [font-family:system-ui]"
     >
       <div className="space-y-0.5">
         <FieldShell error={errors.phone}>
@@ -201,23 +313,32 @@ export default function OrderRequestForm() {
       <div className="space-y-2">
         <p
           className={cn(
-            'rounded-2xl bg-white/80 px-4 py-2 text-center text-[clamp(11px,3.2vw,15px)] leading-tight font-semibold text-[#546474]',
-            !submittedEmail && 'invisible',
+            'rounded-2xl bg-white/80 px-4 py-2 text-center text-[clamp(11px,3.2vw,15px)] font-semibold leading-tight text-[#546474]',
+            !submittedEmail &&
+              !submitError &&
+              'invisible',
           )}
         >
-          {submittedEmail
-            ? `Заявка подготовлена. Сейчас данные выводятся в консоль браузера, письмо для ${submittedEmail} пока не отправляется.`
-            : ' '}
+          {submitError
+            ? submitError
+            : submittedEmail
+              ? 'Заявка отправлена. Счет придет на почту (в течении 4 часов).'
+              : ' '}
         </p>
 
         <LandingActionButton
           type="submit"
+          disabled={isSubmittingEmail}
           className="w-full bg-[#d6882e] py-2 shadow-none hover:bg-[#c77b28]"
           innerClassName="px-4 py-2 text-[clamp(16px,4.8vw,26px)] font-semibold leading-none tracking-normal"
-          textForButton="запросить счет "
+          textForButton={
+            isSubmittingEmail
+              ? 'отправка...'
+              : 'запросить счет'
+          }
         />
 
-        <p className="px-3 text-center text-[clamp(11px,3.3vw,15px)] leading-tight font-black text-[#546474] uppercase">
+        <p className="px-3 text-center text-[clamp(11px,3.3vw,15px)] font-black leading-tight text-[#546474]">
           *самовывоз (яндекс доставка) силами
           заказчика
         </p>

@@ -1,13 +1,11 @@
-import frameSizeConfig from '../../config/frameSizeConfig'
-import stonesData from '../../data/stones.json'
-import OverlayLayout from '../ui/OverlayLayout'
+import { useNavigate } from 'react-router-dom'
 
-type Stone = {
-  id: string
-  name: string
-  pricePerSheet: number
-  image: string
-}
+import { appPagePathByPage } from '../../config/appPageRoutes'
+import frameSizeConfig from '../../config/frameSizeConfig'
+import { useAppData } from '../../context/AppDataContext'
+import stonesData from '../../data/stones.json'
+import type { Stone } from '../../types/stone'
+import OverlayLayout from '../ui/OverlayLayout'
 
 const stones = stonesData as Stone[]
 
@@ -24,26 +22,40 @@ function getDisplayName(name: string) {
 }
 
 function formatPrice(price: number) {
-  return new Intl.NumberFormat('ru-RU').format(price)
+  return new Intl.NumberFormat('ru-RU').format(
+    price,
+  )
 }
 
 export default function Catalog() {
+  const navigate = useNavigate()
+  const { setSelectedStone } = useAppData()
+
+  function handleStoneClick(stone: Stone) {
+    setSelectedStone(stone)
+    navigate(appPagePathByPage.calculator)
+  }
+
   return (
-    <OverlayLayout frame={frameSizeConfig.stoneCatalog}>
-      <section className="col-[1/-1] row-[1/-1] flex min-h-0 flex-col px-[8%] pb-8 pt-[14%] text-white">
+    <OverlayLayout
+      frame={frameSizeConfig.stoneCatalog}
+    >
+      <section className="col-[1/-1] row-[1/-1] flex min-h-0 flex-col px-[8%] pt-[14%] pb-8 text-white">
         <header className="mb-8 pr-[5.75rem] text-center">
-          <h1 className="text-[clamp(28px,9vw,46px)] font-black leading-[0.88] tracking-normal">
+          <h1 className="text-[clamp(28px,9vw,46px)] leading-[0.88] font-black tracking-normal">
             ВЫБЕРИТЕ
             <br />
             ЦВЕТ
           </h1>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1 [font-family:system-ui] font-normal">
           {stones.map((stone) => (
-            <article
+            <button
+              type="button"
               key={stone.id}
-              className="grid min-h-[96px] grid-cols-[45%_1fr] overflow-hidden rounded-[2rem] border-2 border-[#d98328] bg-[#4f6370]"
+              onClick={() => handleStoneClick(stone)}
+              className="grid min-h-[96px] grid-cols-[45%_1fr] overflow-hidden rounded-[2rem] border-2 border-[#d98328] bg-[#4f6370] text-left transition-transform active:scale-[0.985]"
             >
               <div className="relative overflow-hidden rounded-[1.85rem] bg-white">
                 <img
@@ -55,14 +67,17 @@ export default function Catalog() {
               </div>
 
               <div className="flex min-w-0 flex-col items-center justify-center px-3 py-3 text-center">
-                <h2 className="max-w-full text-[clamp(13px,4.25vw,19px)] font-black leading-[0.9] tracking-normal">
+                <h2 className="max-w-full text-[clamp(13px,4.25vw,19px)] leading-[0.9]  tracking-normal">
                   {getDisplayName(stone.name)}
                 </h2>
-                <p className="mt-1 text-[clamp(10px,3.4vw,14px)] font-black leading-none tracking-normal">
-                  {formatPrice(stone.pricePerSheet)} РУБ/ЛИСТ
+                <p className="mt-1 text-[clamp(10px,3.4vw,14px)] leading-none  tracking-normal">
+                  {formatPrice(
+                    stone.pricePerSheet,
+                  )}{' '}
+                  РУБ/ЛИСТ
                 </p>
               </div>
-            </article>
+            </button>
           ))}
         </div>
       </section>

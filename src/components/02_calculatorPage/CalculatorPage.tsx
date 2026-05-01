@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   type SubmitHandler,
   useForm,
 } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 
+import { appPagePathByPage } from '../../config/appPageRoutes'
 import frameSizeConfig from '../../config/frameSizeConfig'
+import { useAppData } from '../../context/AppDataContext'
+import type { CalculatorFormValues } from '../../types/calculator'
 import OverlayLayout from '../ui/OverlayLayout'
 import LengthData from './components/LengthData'
 import WithData from './components/WithData'
@@ -14,14 +18,6 @@ import CountData from './components/CountData'
 import LandingActionButton from '../ui/LandingActionButton'
 import { cn } from '../../lib/utils'
 
-type CalculatorFormValues = {
-  length: string
-  width: string
-  thickness: string
-  stone: string
-  count: string
-}
-
 const numberRules = {
   required: 'Заполни поле',
   pattern: {
@@ -30,30 +26,65 @@ const numberRules = {
   },
 }
 
+function getStoneDisplayName(name: string) {
+  const grandexIndex = name
+    .toLowerCase()
+    .indexOf('grandex')
+
+  return grandexIndex >= 0
+    ? name.slice(grandexIndex)
+    : name
+}
+
 export default function Calculator() {
+  const navigate = useNavigate()
+  const {
+    selectedStone,
+    calculatorFormValues,
+    setCalculatorFormValues,
+  } = useAppData()
   const [lastAdded, setLastAdded] =
     useState<CalculatorFormValues | null>(null)
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CalculatorFormValues>({
     mode: 'onTouched',
-    defaultValues: {
-      length: '',
-      width: '',
-      thickness: '',
-      stone: '',
-      count: '',
-    },
+    defaultValues: calculatorFormValues,
   })
+
+  useEffect(() => {
+    const subscription = watch((values) => {
+      setCalculatorFormValues({
+        length: values.length ?? '',
+        width: values.width ?? '',
+        thickness: values.thickness ?? '',
+        stone: values.stone ?? '',
+        count: values.count ?? '',
+      })
+    })
+
+    return () => subscription.unsubscribe()
+  }, [setCalculatorFormValues, watch])
+
+  useEffect(() => {
+    setValue('stone', selectedStone?.id ?? '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    })
+  }, [selectedStone, setValue])
 
   const onSubmit: SubmitHandler<
     CalculatorFormValues
   > = (data) => {
     console.info('Calculator add to cart', data)
     setLastAdded(data)
+    navigate(appPagePathByPage.order)
   }
 
   return (
@@ -100,10 +131,20 @@ export default function Calculator() {
           })}
         />
         <StoneData
+          value={selectedStone?.id ?? ''}
+          buttonText={
+            selectedStone
+              ? getStoneDisplayName(selectedStone.name)
+              : 'Выбрать'
+          }
           aria-invalid={Boolean(errors.stone)}
           className={cn(
             errors.stone && 'ring-2 ring-[#b4574b]',
           )}
+          buttonProps={{
+            title: selectedStone?.name,
+            onClick: () => navigate(appPagePathByPage.catalog),
+          }}
           {...register('stone', {
             required: 'Выбери камень',
           })}

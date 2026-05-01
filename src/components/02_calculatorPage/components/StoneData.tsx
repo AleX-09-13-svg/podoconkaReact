@@ -1,58 +1,66 @@
-import type { SelectHTMLAttributes } from 'react'
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from 'react'
+
 import { cn } from '../../../lib/utils'
 
 type StoneDataProps = Omit<
-  SelectHTMLAttributes<HTMLSelectElement>,
+  InputHTMLAttributes<HTMLInputElement>,
   'className'
 > & {
   className?: string
-  label?: string
-  options?: string[]
-  placeholder?: string
+  label?: ReactNode
+  buttonText?: ReactNode
+  buttonProps?: ButtonHTMLAttributes<HTMLButtonElement>
 }
 
-export default function StoneData({
-  className,
-  label = 'камень',
-  name = 'stone',
-  value,
-  onChange,
-  options = ['Акрил', 'Мрамор', 'Гранит'],
-  placeholder = 'выбрать',
-  ...selectProps
-}: StoneDataProps) {
+const StoneData = forwardRef<
+  HTMLInputElement,
+  StoneDataProps
+>(function StoneData(
+  {
+    className,
+    label = 'Камень',
+    name = 'stone',
+    buttonText = 'Выбрать',
+    buttonProps,
+    ...inputProps
+  },
+  ref,
+) {
   return (
-    <label
+    <div
       className={cn(
         'flex w-full items-center justify-between gap-4 bg-white/95 px-4 py-3',
         className,
       )}
     >
-      <span
-        className="text-[clamp(22px,6vw,36px)] font-semibold leading-none text-[#526474]"
-      >
+      <span className="text-[clamp(22px,6vw,36px)] leading-none font-semibold text-[#526474]">
         {label}
       </span>
 
-      <select
+      <input
+        ref={ref}
+        type="hidden"
         name={name}
-        value={value}
-        onChange={onChange}
-        className="h-[clamp(44px,13vw,58px)] w-[clamp(130px,40vw,170px)] appearance-none rounded-full border-[3px] border-[#526474] bg-white px-5 text-center text-[clamp(18px,4vw,28px)] text-[#526474] outline-none transition-colors focus:border-[#41525f]"
-        {...selectProps}
+        {...inputProps}
+      />
+
+      <button
+        type="button"
+        {...buttonProps}
+        className={cn(
+          'h-[clamp(44px,13vw,58px)] w-full min-w-0 flex-1 overflow-hidden rounded-full border-[3px] border-[#526474] bg-white px-5 text-center [font-family:system-ui] text-[14px] leading-none font-semibold text-ellipsis whitespace-nowrap text-[#526474] transition-colors outline-none hover:bg-[#f4ede8] focus:border-[#41525f]',
+          buttonProps?.className,
+        )}
       >
-        <option value="">
-          {placeholder}
-        </option>
-        {options.map((option) => (
-          <option
-            key={option}
-            value={option}
-          >
-            {option}
-          </option>
-        ))}
-      </select>
-    </label>
+        {buttonText}
+      </button>
+    </div>
   )
-}
+})
+
+export default StoneData
