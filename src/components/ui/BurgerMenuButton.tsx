@@ -37,17 +37,24 @@ export default function BurgerMenuButton({
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        aria-label="Open menu"
+        aria-label={open ? 'Close menu' : 'Open menu'}
         className={cn(
           'flex aspect-square min-w-[5rem] items-center justify-center rounded-[1rem] border-[5px] border-[#7e7368] bg-white shadow-[0_12px_24px_rgba(126,115,104,0.12)] transition hover:bg-black/10',
           className,
         )}
       >
-        <div className="flex w-[58%] flex-col gap-3">
-          <span className="block h-2 rounded-full bg-[#7e7368]" />
-          <span className="block h-2 rounded-full bg-[#7e7368]" />
-          <span className="block h-2 rounded-full bg-[#7e7368]" />
-        </div>
+        {open ? (
+          <div className="relative h-10 w-10">
+            <span className="absolute top-1/2 left-0 block h-2 w-full -translate-y-1/2 rotate-45 rounded-full bg-[#7e7368]" />
+            <span className="absolute top-1/2 left-0 block h-2 w-full -translate-y-1/2 -rotate-45 rounded-full bg-[#7e7368]" />
+          </div>
+        ) : (
+          <div className="flex w-[58%] flex-col gap-3">
+            <span className="block h-2 rounded-full bg-[#7e7368]" />
+            <span className="block h-2 rounded-full bg-[#7e7368]" />
+            <span className="block h-2 rounded-full bg-[#7e7368]" />
+          </div>
+        )}
       </button>
 
       {open && (

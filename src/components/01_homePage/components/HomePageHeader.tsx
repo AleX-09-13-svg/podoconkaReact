@@ -3,7 +3,7 @@ import LandingActionButton from '../../ui/LandingActionButton'
 
 export default function HomePageHeader() {
   return (
-    <div className="col-[1/5] row-[1/3] flex h-full flex-col px-2">
+    <div className="relative z-30 col-[1/5] row-[1/3] flex h-full flex-col px-2">
       <div className="mt-3 w-full">
         <div className="min-w-0">
           <ContactBar className="w-2/3" />

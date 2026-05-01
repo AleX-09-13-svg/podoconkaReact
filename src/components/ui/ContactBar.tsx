@@ -37,7 +37,7 @@ export default function ContactBar({
       onClick={handleCall}
       aria-label="Позвонить по номеру +79647735543"
       className={cn(
-        `${className} flex cursor-pointer items-center gap-3 rounded-[2.2rem] border-[5px] border-[#786d62] bg-white px-2 py-2 text-left shadow-[0_14px_24px_rgba(120,109,98,0.12)] transition-colors duration-200 ease-out`,
+        `${className} relative z-40 flex cursor-pointer touch-manipulation items-center gap-3 rounded-[2.2rem] border-[5px] border-[#786d62] bg-white px-2 py-2 text-left shadow-[0_14px_24px_rgba(120,109,98,0.12)] transition-colors duration-200 ease-out`,
       )}
     >
       <div className="min-w-0 flex-1 truncate text-[clamp(14px,4.6vw,32px)] leading-none whitespace-nowrap text-[#786d62]">
