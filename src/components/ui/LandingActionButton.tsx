@@ -27,6 +27,20 @@ type LandingActionButtonProps =
   | LandingActionButtonButtonProps
   | LandingActionButtonLinkProps
 
+type LandingActionButtonRestButtonProps = Omit<
+  LandingActionButtonButtonProps,
+  'textForButton' | 'className' | 'innerClassName'
+>
+
+function isLandingActionLinkProps(
+  props: Omit<LandingActionButtonProps, 'textForButton' | 'className' | 'innerClassName'>,
+): props is Omit<
+  LandingActionButtonLinkProps,
+  'textForButton' | 'className' | 'innerClassName'
+> {
+  return 'href' in props && typeof props.href === 'string'
+}
+
 export default function LandingActionButton({
   textForButton: textForButton,
   className,
@@ -38,7 +52,7 @@ export default function LandingActionButton({
     className,
   )
 
-  if ('href' in props && props.href) {
+  if (isLandingActionLinkProps(props)) {
     return (
       <a
         className={sharedClassName}
@@ -56,7 +70,8 @@ export default function LandingActionButton({
     )
   }
 
-  const { type = 'button', ...buttonProps } = props
+  const { type = 'button', ...buttonProps } =
+    props as LandingActionButtonRestButtonProps
 
   return (
     <button
