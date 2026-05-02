@@ -218,7 +218,7 @@ export default function Order() {
             className="mt-8 w-full bg-[#d6882e] px-2 py-2 shadow-none hover:bg-[#c77b28]"
             onClick={handleAddOrderItem}
             innerClassName="px-4 py-2 text-[clamp(16px,4.8vw,24px)] font-semibold tracking-normal"
-            textForButton="добавить в заказ"
+            textForButton="добавить к заказу"
           />
 
           <LandingActionButton
