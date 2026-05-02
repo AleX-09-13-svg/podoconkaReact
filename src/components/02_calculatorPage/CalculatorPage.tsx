@@ -106,9 +106,6 @@ export default function Calculator() {
           type="text"
           inputMode="decimal"
           aria-invalid={Boolean(errors.length)}
-          className={cn(
-            errors.length && 'ring-2 ring-[#b4574b]',
-          )}
           {...register('length', numberRules)}
         />
         <WithData
@@ -138,15 +135,12 @@ export default function Calculator() {
               : 'Выбрать'
           }
           aria-invalid={Boolean(errors.stone)}
-          className={cn(
-            errors.stone && 'ring-2 ring-[#b4574b]',
-          )}
           buttonProps={{
             title: selectedStone?.name,
             onClick: () => navigate(appPagePathByPage.catalog),
           }}
           {...register('stone', {
-            required: 'Выбери камень',
+            required: true,
           })}
         />
         <CountData

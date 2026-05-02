@@ -6,6 +6,13 @@ type CalculatorFormValues = {
   count: string
 }
 
+type OrderItem = Pick<
+  CalculatorFormValues,
+  'length' | 'width' | 'thickness' | 'count'
+> & {
+  id: string
+}
+
 const calculatorFormDefaultValues: CalculatorFormValues = {
   length: '',
   width: '',
@@ -15,4 +22,4 @@ const calculatorFormDefaultValues: CalculatorFormValues = {
 }
 
 export { calculatorFormDefaultValues }
-export type { CalculatorFormValues }
+export type { CalculatorFormValues, OrderItem }

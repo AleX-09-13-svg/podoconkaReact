@@ -8,7 +8,10 @@ import {
 } from 'react-hook-form'
 
 import { useAppData } from '../../../context/AppDataContext'
-import { calculateStoneCut } from '../../../lib/guillotinePacking'
+import {
+  calculateStoneOrderCut,
+  type GuillotinePackingItem,
+} from '../../../lib/guillotinePacking'
 import { cn } from '../../../lib/utils'
 import LandingActionButton from '../../ui/LandingActionButton'
 
@@ -17,6 +20,10 @@ type OrderRequestFormValues = {
   fullName: string
   email: string
   message: string
+}
+
+type OrderRequestFormProps = {
+  cutQuality: 'good' | 'bad'
 }
 
 type FieldShellProps = {
@@ -30,6 +37,9 @@ const inputClassName =
 
 const textareaClassName =
   'min-h-[308px] w-full resize-none rounded-[1.35rem] border-2 border-[#ddd5ce] bg-[#ddd5ce] px-4 py-4 text-[clamp(14px,3.8vw,21px)] font-normal leading-[1.08] text-[#546474] outline-none transition-colors placeholder:text-[#546474]/50 focus:border-[#c7873b] focus:bg-[#d1c8bf] [font-family:system-ui]'
+
+const manualCutPriceText =
+  'Стоимость пересчитается по итогу ручного раскроя'
 
 function FieldShell({
   children,
@@ -75,7 +85,9 @@ function formatPrice(price: number) {
   }).format(price)
 }
 
-export default function OrderRequestForm() {
+export default function OrderRequestForm({
+  cutQuality,
+}: OrderRequestFormProps) {
   const [submittedEmail, setSubmittedEmail] =
     useState<string | null>(null)
   const [isSubmittingEmail, setIsSubmittingEmail] =
@@ -83,8 +95,11 @@ export default function OrderRequestForm() {
   const [submitError, setSubmitError] = useState<
     string | null
   >(null)
-  const { selectedStone, calculatorFormValues } =
-    useAppData()
+  const {
+    selectedStone,
+    calculatorFormValues,
+    orderItems,
+  } = useAppData()
   const { length, width, thickness, count } =
     calculatorFormValues
   const serviceId = import.meta.env
@@ -94,39 +109,91 @@ export default function OrderRequestForm() {
   const publicKey = import.meta.env
     .VITE_EMAILJS_PUBLIC_KEY
   const defaultMessage = useMemo(() => {
+    const hasCurrentSill =
+      length && width && thickness && count
+    const sillDescriptions = [
+      ...(hasCurrentSill
+        ? [
+            `${getNumericValue(length)}x${getNumericValue(width)}x${getNumericValue(thickness)}-${getNumericValue(count)} шт.`,
+          ]
+        : []),
+      ...orderItems.map(
+        (item) =>
+          `${getNumericValue(item.length)}x${getNumericValue(item.width)}x${getNumericValue(item.thickness)}-${getNumericValue(item.count)} шт.`,
+      ),
+    ]
+    const cutItems: GuillotinePackingItem[] = [
+      ...(hasCurrentSill
+        ? [
+            {
+              labelPrefix: '1.',
+              partLength: getNumberValue(length),
+              partWidth: getNumberValue(width),
+              count: getNumberValue(count),
+              edgeBandWidth: getNumberValue(thickness),
+            },
+          ]
+        : []),
+      ...orderItems.map((item, index) => ({
+        labelPrefix: `${index + (hasCurrentSill ? 2 : 1)}.`,
+        partLength: getNumberValue(item.length),
+        partWidth: getNumberValue(item.width),
+        count: getNumberValue(item.count),
+        edgeBandWidth: getNumberValue(item.thickness),
+      })),
+    ]
     const sillDescription =
       length && width && thickness && count
         ? `${getNumericValue(length)}x${getNumericValue(width)}x${getNumericValue(thickness)}-${getNumericValue(count)} шт.`
         : 'параметры не заданы'
+    const requestSillDescription =
+      sillDescriptions.length
+        ? sillDescriptions
+            .map(
+              (description, index) =>
+                `${index + 1}. ${description}`,
+            )
+            .join('; ')
+        : sillDescription
     const stoneName = selectedStone
       ? getStoneDisplayName(selectedStone.name)
       : 'камень не выбран'
-    const result = selectedStone
-      ? calculateStoneCut({
-          partLength: getNumberValue(length),
-          partWidth: getNumberValue(width),
-          count: getNumberValue(count),
-          pricePerSheet: selectedStone.pricePerSheet,
-          config: {
-            sheetLength: 3660,
-            sheetWidth: 750,
-            edgeGap: 10,
-            partGap: 5,
-            edgeBandWidth: getNumberValue(thickness),
-            includeEdgeBands: true,
-            allowRotate: true,
-            preferMinimalUsedLength: true,
-            purchaseStepQuarters: 1,
-            maxQuarters: 40,
-          },
-        })
-      : null
+    const result =
+      selectedStone && cutItems.length
+        ? calculateStoneOrderCut({
+            items: cutItems,
+            pricePerSheet: selectedStone.pricePerSheet,
+            config: {
+              sheetLength: 3660,
+              sheetWidth: 750,
+              edgeGap: 10,
+              partGap: 5,
+              includeEdgeBands: true,
+              allowRotate: true,
+              preferMinimalUsedLength: true,
+              purchaseStepQuarters: 1,
+              maxQuarters: 40,
+            },
+          })
+        : null
     const priceText = result
       ? `${formatPrice(result.totalPrice)} руб.`
       : 'стоимость не рассчитана'
+    const manualCutPriceNote =
+      cutQuality === 'bad'
+        ? ` (${manualCutPriceText})`
+        : ''
 
-    return `Прошу выставить счет на подоконники ${sillDescription}. ${stoneName} ${priceText}`
-  }, [count, length, selectedStone, thickness, width])
+    return `Прошу выставить счет на подоконники ${requestSillDescription}. ${stoneName} ${priceText}${manualCutPriceNote}`
+  }, [
+    count,
+    cutQuality,
+    length,
+    orderItems,
+    selectedStone,
+    thickness,
+    width,
+  ])
 
   const {
     register,
@@ -294,6 +361,11 @@ export default function OrderRequestForm() {
           >
             Текст запроса
           </label>
+          {cutQuality === 'bad' && (
+            <p className="px-3 pb-2 text-[clamp(16px,4.4vw,24px)] font-bold leading-tight text-[#b4574b]">
+              {manualCutPriceText}
+            </p>
+          )}
           <textarea
             id="order-message"
             aria-invalid={Boolean(errors.message)}

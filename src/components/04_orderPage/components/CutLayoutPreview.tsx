@@ -156,7 +156,7 @@ export default function CutLayoutPreview({
                         fontSize="24"
                         fontWeight="500"
                       >
-                        {index + 1}. {formatSize(part)}
+                        {formatSize(part)}
                       </text>
                     )}
                   </g>

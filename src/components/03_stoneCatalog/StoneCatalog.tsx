@@ -1,3 +1,7 @@
+import {
+  type FormEvent,
+  useState,
+} from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { appPagePathByPage } from '../../config/appPageRoutes'
@@ -8,6 +12,7 @@ import type { Stone } from '../../types/stone'
 import OverlayLayout from '../ui/OverlayLayout'
 
 const stones = stonesData as Stone[]
+const customStoneId = 'custom-stone'
 
 function getDisplayName(name: string) {
   const grandexIndex = name
@@ -29,11 +34,57 @@ function formatPrice(price: number) {
 
 export default function Catalog() {
   const navigate = useNavigate()
-  const { setSelectedStone } = useAppData()
+  const { selectedStone, setSelectedStone } =
+    useAppData()
+  const [customStoneName, setCustomStoneName] =
+    useState(
+      selectedStone?.id === customStoneId
+        ? selectedStone.name
+        : '',
+    )
+  const [customStonePrice, setCustomStonePrice] =
+    useState(
+      selectedStone?.id === customStoneId
+        ? String(selectedStone.pricePerSheet)
+        : '',
+    )
 
   function handleStoneClick(stone: Stone) {
     setSelectedStone(stone)
     navigate(appPagePathByPage.calculator)
+  }
+
+  function getCustomStonePrice() {
+    return Number(
+      customStonePrice
+        .replace(/\s/g, '')
+        .replace(',', '.'),
+    )
+  }
+
+  function handleCustomStoneSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    const name = customStoneName.trim()
+    const pricePerSheet = getCustomStonePrice()
+
+    if (
+      !name ||
+      !customStonePrice.trim() ||
+      !Number.isFinite(pricePerSheet) ||
+      pricePerSheet <= 0
+    ) {
+      return
+    }
+
+    handleStoneClick({
+      id: customStoneId,
+      name,
+      pricePerSheet,
+      image: '',
+    })
   }
 
   return (
@@ -50,6 +101,55 @@ export default function Catalog() {
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1 [font-family:system-ui] font-normal">
+          <form
+            onSubmit={handleCustomStoneSubmit}
+            className="grid min-h-[112px] grid-cols-[45%_1fr] overflow-hidden rounded-[2rem] border-2 border-[#d98328] bg-[#4f6370] text-left"
+          >
+            <div className="flex items-center justify-center rounded-[1.85rem] bg-white px-3 text-center text-[clamp(14px,4.2vw,20px)] leading-none font-semibold text-[#4f6370]">
+              СВОЙ
+              <br />
+              КАМЕНЬ
+            </div>
+
+            <div className="flex min-w-0 flex-col justify-center gap-2 px-3 py-3">
+              <label className="sr-only" htmlFor="custom-stone-name">
+                Название камня
+              </label>
+              <input
+                id="custom-stone-name"
+                type="text"
+                value={customStoneName}
+                onChange={(event) =>
+                  setCustomStoneName(event.target.value)
+                }
+                placeholder="Название камня"
+                className="h-9 w-full rounded-full bg-white px-3 text-[14px] leading-none text-[#526474] outline-none placeholder:text-[#526474]/55 focus:ring-2 focus:ring-[#d98328]"
+              />
+
+              <label className="sr-only" htmlFor="custom-stone-price">
+                Стоимость
+              </label>
+              <input
+                id="custom-stone-price"
+                type="text"
+                inputMode="decimal"
+                value={customStonePrice}
+                onChange={(event) =>
+                  setCustomStonePrice(event.target.value)
+                }
+                placeholder="Стоимость"
+                className="h-9 w-full rounded-full bg-white px-3 text-[14px] leading-none text-[#526474] outline-none placeholder:text-[#526474]/55 focus:ring-2 focus:ring-[#d98328]"
+              />
+
+              <button
+                type="submit"
+                className="h-8 rounded-full bg-[#d98328] px-3 text-[12px] leading-none font-semibold text-white transition-colors hover:bg-[#bf7627]"
+              >
+                ВЫБРАТЬ
+              </button>
+            </div>
+          </form>
+
           {stones.map((stone) => (
             <button
               type="button"

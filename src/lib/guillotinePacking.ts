@@ -7,6 +7,7 @@ type GuillotinePackingConfig = {
   includeEdgeBands: boolean
   allowRotate: boolean
   preferMinimalUsedLength: boolean
+  preferUsedBins: boolean
   purchaseStepQuarters: number
   maxQuarters: number
 }
@@ -15,6 +16,20 @@ type GuillotinePackingInput = {
   partLength: number
   partWidth: number
   count: number
+  pricePerSheet: number
+  config?: Partial<GuillotinePackingConfig>
+}
+
+type GuillotinePackingItem = {
+  labelPrefix?: string
+  partLength: number
+  partWidth: number
+  count: number
+  edgeBandWidth?: number
+}
+
+type GuillotinePackingOrderInput = {
+  items: GuillotinePackingItem[]
   pricePerSheet: number
   config?: Partial<GuillotinePackingConfig>
 }
@@ -73,6 +88,7 @@ const defaultGuillotinePackingConfig: GuillotinePackingConfig = {
   includeEdgeBands: true,
   allowRotate: true,
   preferMinimalUsedLength: true,
+  preferUsedBins: true,
   purchaseStepQuarters: 1,
   maxQuarters: 40,
 }
@@ -113,6 +129,84 @@ function calculateStoneCut({
       count,
       config: resolvedConfig,
     })
+    const placements = packPartsInBins({
+      bins,
+      parts,
+      config: resolvedConfig,
+    })
+
+    if (placements) {
+      const pricePerQuarter = pricePerSheet / 4
+
+      return {
+        quartersNeeded: quarters,
+        sheetsNeeded: quarters / 4,
+        pricePerQuarter,
+        totalPrice: pricePerQuarter * quarters,
+        placements,
+        config: resolvedConfig,
+      }
+    }
+  }
+
+  return null
+}
+
+function calculateStoneOrderCut({
+  items,
+  pricePerSheet,
+  config,
+}: GuillotinePackingOrderInput): CutCalculationResult | null {
+  const resolvedConfig = {
+    ...defaultGuillotinePackingConfig,
+    ...config,
+  }
+
+  if (
+    !items.length ||
+    pricePerSheet <= 0 ||
+    items.some(
+      (item) =>
+        item.partLength <= 0 ||
+        item.partWidth <= 0 ||
+        item.count <= 0,
+    )
+  ) {
+    return null
+  }
+
+  const parts = items
+    .flatMap((item, itemIndex) =>
+      createPartsToPack({
+        partLength: item.partLength,
+        partWidth: item.partWidth,
+        count: item.count,
+        config: {
+          ...resolvedConfig,
+          edgeBandWidth:
+            item.edgeBandWidth ??
+            resolvedConfig.edgeBandWidth,
+        },
+      }).map((part) => ({
+        ...part,
+        label: `${item.labelPrefix ?? `${itemIndex + 1}.`} ${part.label}`,
+      })),
+    )
+    .sort(
+      (first, second) =>
+        second.length * second.width -
+        first.length * first.width,
+    )
+
+  for (
+    let quarters = resolvedConfig.purchaseStepQuarters;
+    quarters <= resolvedConfig.maxQuarters;
+    quarters += resolvedConfig.purchaseStepQuarters
+  ) {
+    const bins = createPurchasedBins(
+      quarters,
+      resolvedConfig,
+    )
     const placements = packPartsInBins({
       bins,
       parts,
@@ -199,37 +293,160 @@ function packPartsInBins({
   for (const part of parts) {
     const occupiedLength = part.length + config.partGap
     const occupiedWidth = part.width + config.partGap
-    let placed = false
+    const bestPlacement = findBestBinPlacement({
+      bins,
+      length: occupiedLength,
+      width: occupiedWidth,
+      config,
+    })
 
-    for (
-      let binIndex = 0;
-      binIndex < bins.length && !placed;
-      binIndex += 1
-    ) {
-      const candidate = findBestPlacement(
-        bins[binIndex],
-        occupiedLength,
-        occupiedWidth,
-        config,
-      )
-
-      if (candidate) {
-        placePart({
-          bin: bins[binIndex],
-          binIndex,
-          candidate,
-          part,
-        })
-        placed = true
-      }
-    }
-
-    if (!placed) {
+    if (!bestPlacement) {
       return null
     }
+
+    placePart({
+      bin: bins[bestPlacement.binIndex],
+      binIndex: bestPlacement.binIndex,
+      candidate: bestPlacement.candidate,
+      part,
+    })
   }
 
   return bins.flatMap((bin) => bin.placements)
+}
+
+function findBestBinPlacement({
+  bins,
+  length,
+  width,
+  config,
+}: {
+  bins: Bin[]
+  length: number
+  width: number
+  config: GuillotinePackingConfig
+}) {
+  const activeBinIndexes = bins
+    .map((bin, index) =>
+      bin.placements.length > 0 ? index : -1,
+    )
+    .filter((index) => index >= 0)
+  const emptyBinIndexes = bins
+    .map((bin, index) =>
+      bin.placements.length === 0 ? index : -1,
+    )
+    .filter((index) => index >= 0)
+  const binIndexGroups =
+    config.preferUsedBins &&
+    activeBinIndexes.length > 0
+      ? [activeBinIndexes, emptyBinIndexes]
+      : [[...activeBinIndexes, ...emptyBinIndexes]]
+
+  for (const binIndexes of binIndexGroups) {
+    let bestPlacement:
+      | {
+          binIndex: number
+          candidate: PlacementCandidate
+        }
+      | null = null
+
+    for (const binIndex of binIndexes) {
+      const candidate = findBestPlacement(
+        bins[binIndex],
+        length,
+        width,
+        config,
+      )
+
+      if (
+        candidate &&
+        isBetterBinPlacement({
+          bins,
+          binIndex,
+          candidate,
+          bestPlacement,
+        })
+      ) {
+        bestPlacement = {
+          binIndex,
+          candidate,
+        }
+      }
+    }
+
+    if (bestPlacement) {
+      return bestPlacement
+    }
+  }
+
+  return null
+}
+
+function getBinUsedLengthEnd(bin: Bin) {
+  return bin.placements.reduce(
+    (usedLengthEnd, placement) =>
+      Math.max(
+        usedLengthEnd,
+        placement.x + placement.length,
+      ),
+    0,
+  )
+}
+
+function isBetterBinPlacement({
+  bins,
+  binIndex,
+  candidate,
+  bestPlacement,
+}: {
+  bins: Bin[]
+  binIndex: number
+  candidate: PlacementCandidate
+  bestPlacement: {
+    binIndex: number
+    candidate: PlacementCandidate
+  } | null
+}) {
+  if (!bestPlacement) {
+    return true
+  }
+
+  const currentUsedLengthEnd = getBinUsedLengthEnd(
+    bins[binIndex],
+  )
+  const bestUsedLengthEnd = getBinUsedLengthEnd(
+    bins[bestPlacement.binIndex],
+  )
+  const candidateResultLengthEnd = Math.max(
+    currentUsedLengthEnd,
+    candidate.usedLengthEnd,
+  )
+  const bestResultLengthEnd = Math.max(
+    bestUsedLengthEnd,
+    bestPlacement.candidate.usedLengthEnd,
+  )
+  const candidateLengthIncrease =
+    candidateResultLengthEnd - currentUsedLengthEnd
+  const bestLengthIncrease =
+    bestResultLengthEnd - bestUsedLengthEnd
+
+  if (candidateLengthIncrease !== bestLengthIncrease) {
+    return candidateLengthIncrease < bestLengthIncrease
+  }
+
+  if (candidateResultLengthEnd !== bestResultLengthEnd) {
+    return candidateResultLengthEnd < bestResultLengthEnd
+  }
+
+  if (candidate.x !== bestPlacement.candidate.x) {
+    return candidate.x < bestPlacement.candidate.x
+  }
+
+  if (candidate.y !== bestPlacement.candidate.y) {
+    return candidate.y < bestPlacement.candidate.y
+  }
+
+  return binIndex < bestPlacement.binIndex
 }
 
 type PartToPack = {
@@ -359,13 +576,6 @@ function isBetterPlacement(
 
   if (
     config.preferMinimalUsedLength &&
-    candidate.y !== bestCandidate.y
-  ) {
-    return candidate.y < bestCandidate.y
-  }
-
-  if (
-    config.preferMinimalUsedLength &&
     candidate.usedLengthEnd !== bestCandidate.usedLengthEnd
   ) {
     return (
@@ -379,6 +589,13 @@ function isBetterPlacement(
     candidate.x !== bestCandidate.x
   ) {
     return candidate.x < bestCandidate.x
+  }
+
+  if (
+    config.preferMinimalUsedLength &&
+    candidate.y !== bestCandidate.y
+  ) {
+    return candidate.y < bestCandidate.y
   }
 
   if (candidate.score !== bestCandidate.score) {
@@ -409,7 +626,6 @@ function placePart({
   candidate: PlacementCandidate
   part: PartToPack
 }) {
-  const freeRect = bin.freeRects[candidate.freeRectIndex]
   const actualLength = candidate.rotated
     ? part.width
     : part.length
@@ -420,77 +636,125 @@ function placePart({
   bin.placements.push({
     binIndex,
     label: part.label,
-    x: freeRect.x,
-    y: freeRect.y,
+    x: candidate.x,
+    y: candidate.y,
     length: actualLength,
     width: actualWidth,
     rotated: candidate.rotated,
   })
 
-  const newFreeRects = splitFreeRect(
-    freeRect,
-    candidate.length,
-    candidate.width,
-  )
-
-  bin.freeRects.splice(
-    candidate.freeRectIndex,
-    1,
-    ...newFreeRects,
+  bin.freeRects = pruneFreeRects(
+    bin.freeRects.flatMap((freeRect) =>
+      splitFreeRectByUsedRect(freeRect, {
+        x: candidate.x,
+        y: candidate.y,
+        length: candidate.length,
+        width: candidate.width,
+      }),
+    ),
   )
 }
 
-function splitFreeRect(
+function splitFreeRectByUsedRect(
   freeRect: FreeRect,
-  usedLength: number,
-  usedWidth: number,
+  usedRect: FreeRect,
 ) {
-  const remainingLength = freeRect.length - usedLength
-  const remainingWidth = freeRect.width - usedWidth
+  if (!rectsIntersect(freeRect, usedRect)) {
+    return [freeRect]
+  }
 
-  const verticalSplit = [
-    {
-      x: freeRect.x + usedLength,
+  const freeRight = freeRect.x + freeRect.length
+  const freeBottom = freeRect.y + freeRect.width
+  const usedRight = usedRect.x + usedRect.length
+  const usedBottom = usedRect.y + usedRect.width
+  const splitRects: FreeRect[] = []
+
+  if (usedRect.x > freeRect.x) {
+    splitRects.push({
+      x: freeRect.x,
       y: freeRect.y,
-      length: remainingLength,
+      length: usedRect.x - freeRect.x,
       width: freeRect.width,
-    },
-    {
-      x: freeRect.x,
-      y: freeRect.y + usedWidth,
-      length: usedLength,
-      width: remainingWidth,
-    },
-  ]
+    })
+  }
 
-  const horizontalSplit = [
-    {
-      x: freeRect.x + usedLength,
+  if (usedRight < freeRight) {
+    splitRects.push({
+      x: usedRight,
       y: freeRect.y,
-      length: remainingLength,
-      width: usedWidth,
-    },
-    {
-      x: freeRect.x,
-      y: freeRect.y + usedWidth,
-      length: freeRect.length,
-      width: remainingWidth,
-    },
-  ]
+      length: freeRight - usedRight,
+      width: freeRect.width,
+    })
+  }
 
-  return (remainingLength > remainingWidth
-    ? verticalSplit
-    : horizontalSplit
-  ).filter((rect) => rect.length > 0 && rect.width > 0)
+  if (usedRect.y > freeRect.y) {
+    splitRects.push({
+      x: freeRect.x,
+      y: freeRect.y,
+      length: freeRect.length,
+      width: usedRect.y - freeRect.y,
+    })
+  }
+
+  if (usedBottom < freeBottom) {
+    splitRects.push({
+      x: freeRect.x,
+      y: usedBottom,
+      length: freeRect.length,
+      width: freeBottom - usedBottom,
+    })
+  }
+
+  return splitRects.filter(
+    (rect) => rect.length > 0 && rect.width > 0,
+  )
+}
+
+function rectsIntersect(
+  first: FreeRect,
+  second: FreeRect,
+) {
+  return (
+    first.x < second.x + second.length &&
+    first.x + first.length > second.x &&
+    first.y < second.y + second.width &&
+    first.y + first.width > second.y
+  )
+}
+
+function rectContains(
+  outer: FreeRect,
+  inner: FreeRect,
+) {
+  return (
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.x + inner.length <= outer.x + outer.length &&
+    inner.y + inner.width <= outer.y + outer.width
+  )
+}
+
+function pruneFreeRects(freeRects: FreeRect[]) {
+  return freeRects.filter(
+    (rect, rectIndex) =>
+      !freeRects.some(
+        (otherRect, otherIndex) =>
+          rectIndex !== otherIndex &&
+          rectContains(otherRect, rect),
+      ),
+  )
 }
 
 export {
   calculateStoneCut,
+  calculateStoneOrderCut,
   defaultGuillotinePackingConfig,
 }
 export type {
   CutCalculationResult,
   GuillotinePackingConfig,
   GuillotinePackingInput,
+  GuillotinePackingItem,
+  GuillotinePackingOrderInput,
   PackedPart,
 }
