@@ -1,0 +1,10 @@
+# netlify.toml
+[[redirects]]
+  from = "/yandex_d594183710f3564e.html"
+  to = "/yandex_d594183710f3564e.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
