@@ -1,3 +1,5 @@
+import stonePricingConfig from '../config/stonePricingConfig'
+
 type GuillotinePackingConfig = {
   sheetLength: number
   sheetWidth: number
@@ -48,9 +50,21 @@ type CutCalculationResult = {
   quartersNeeded: number
   sheetsNeeded: number
   pricePerQuarter: number
+  materialPrice: number
   totalPrice: number
+  priceBreakdown: StonePriceBreakdown
   placements: PackedPart[]
   config: GuillotinePackingConfig
+}
+
+type StonePriceBreakdown = {
+  materialPrice: number
+  gluePrice: number
+  cuttingAndGluingWorkPrice: number
+  polishingAndConsumablesPrice: number
+  stoneDeliveryPrice: number
+  linearMeters: number
+  squareMeters: number
 }
 
 type FreeRect = {
@@ -137,12 +151,26 @@ function calculateStoneCut({
 
     if (placements) {
       const pricePerQuarter = pricePerSheet / 4
+      const materialPrice = pricePerQuarter * quarters
+      const priceBreakdown = calculateStonePriceBreakdown({
+        items: [
+          {
+            partLength,
+            partWidth,
+            count,
+          },
+        ],
+        materialPrice,
+        config: resolvedConfig,
+      })
 
       return {
         quartersNeeded: quarters,
         sheetsNeeded: quarters / 4,
         pricePerQuarter,
-        totalPrice: pricePerQuarter * quarters,
+        materialPrice,
+        totalPrice: getStoneTotalPrice(priceBreakdown),
+        priceBreakdown,
         placements,
         config: resolvedConfig,
       }
@@ -215,12 +243,20 @@ function calculateStoneOrderCut({
 
     if (placements) {
       const pricePerQuarter = pricePerSheet / 4
+      const materialPrice = pricePerQuarter * quarters
+      const priceBreakdown = calculateStonePriceBreakdown({
+        items,
+        materialPrice,
+        config: resolvedConfig,
+      })
 
       return {
         quartersNeeded: quarters,
         sheetsNeeded: quarters / 4,
         pricePerQuarter,
-        totalPrice: pricePerQuarter * quarters,
+        materialPrice,
+        totalPrice: getStoneTotalPrice(priceBreakdown),
+        priceBreakdown,
         placements,
         config: resolvedConfig,
       }
@@ -228,6 +264,97 @@ function calculateStoneOrderCut({
   }
 
   return null
+}
+
+function calculateStonePriceBreakdown({
+  items,
+  materialPrice,
+  config,
+}: {
+  items: GuillotinePackingItem[]
+  materialPrice: number
+  config: GuillotinePackingConfig
+}): StonePriceBreakdown {
+  const linearMeters =
+    calculateSillLinearMillimeters(items) / 1000
+  const squareMeters =
+    calculateAllPartsSquareMillimeters({
+      items,
+      config,
+    }) / 1_000_000
+
+  return {
+    materialPrice,
+    gluePrice:
+      linearMeters *
+      stonePricingConfig.gluePricePerLinearMeter,
+    cuttingAndGluingWorkPrice:
+      linearMeters *
+      stonePricingConfig
+        .cuttingAndGluingWorkPricePerLinearMeter,
+    polishingAndConsumablesPrice:
+      squareMeters *
+      stonePricingConfig
+        .polishingAndConsumablesPricePerSquareMeter,
+    stoneDeliveryPrice:
+      stonePricingConfig.stoneDeliveryPrice,
+    linearMeters,
+    squareMeters,
+  }
+}
+
+function getStoneTotalPrice(
+  priceBreakdown: StonePriceBreakdown,
+) {
+  return (
+    priceBreakdown.materialPrice +
+    priceBreakdown.gluePrice +
+    priceBreakdown.cuttingAndGluingWorkPrice +
+    priceBreakdown.polishingAndConsumablesPrice +
+    priceBreakdown.stoneDeliveryPrice
+  )
+}
+
+function calculateSillLinearMillimeters(
+  items: GuillotinePackingItem[],
+) {
+  return items.reduce(
+    (totalLength, item) =>
+      totalLength +
+      (item.partLength + item.partWidth * 2) *
+        item.count,
+    0,
+  )
+}
+
+function calculateAllPartsSquareMillimeters({
+  items,
+  config,
+}: {
+  items: GuillotinePackingItem[]
+  config: GuillotinePackingConfig
+}) {
+  return items.reduce((totalArea, item) => {
+    const itemParts = createPartsToPack({
+      partLength: item.partLength,
+      partWidth: item.partWidth,
+      count: item.count,
+      config: {
+        ...config,
+        edgeBandWidth:
+          item.edgeBandWidth ?? config.edgeBandWidth,
+      },
+    })
+
+    return (
+      totalArea +
+      itemParts.reduce(
+        (itemArea, part) =>
+          itemArea + part.length * part.width,
+        0,
+      )
+    )
+  }, 0)
 }
 
 function createPurchasedBins(
@@ -757,4 +884,5 @@ export type {
   GuillotinePackingItem,
   GuillotinePackingOrderInput,
   PackedPart,
+  StonePriceBreakdown,
 }

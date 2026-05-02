@@ -59,6 +59,12 @@ function shouldShowPartLabel(part: PackedPart) {
   return Math.min(part.length, part.width) >= 100
 }
 
+function formatPrice(price: number) {
+  return new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: 0,
+  }).format(price)
+}
+
 export default function CutLayoutPreview({
   result,
   onClose,
@@ -75,7 +81,7 @@ export default function CutLayoutPreview({
             </h2>
             <p className="mt-1 text-[13px] leading-tight text-[#526474]/75">
               {result.quartersNeeded}/4 листа,
-              стоимость {Math.round(result.totalPrice)} руб.
+              стоимость {formatPrice(result.totalPrice)} руб.
             </p>
           </div>
           <button
@@ -92,6 +98,35 @@ export default function CutLayoutPreview({
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="grid gap-1 rounded-[0.75rem] bg-white px-4 py-3 text-[13px] leading-tight text-[#526474]">
+            <div className="flex justify-between gap-3">
+              <span>Материал</span>
+              <span>{formatPrice(result.priceBreakdown.materialPrice)} руб.</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>Клей</span>
+              <span>{formatPrice(result.priceBreakdown.gluePrice)} руб.</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>Распил и склейка</span>
+              <span>
+                {formatPrice(result.priceBreakdown.cuttingAndGluingWorkPrice)} руб.
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>Полировка и расходники</span>
+              <span>
+                {formatPrice(result.priceBreakdown.polishingAndConsumablesPrice)} руб.
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>Доставка камня</span>
+              <span>
+                {formatPrice(result.priceBreakdown.stoneDeliveryPrice)} руб.
+              </span>
+            </div>
+          </div>
+
           {bins.map((bin) => (
             <section
               key={bin.index}

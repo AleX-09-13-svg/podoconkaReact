@@ -270,6 +270,13 @@ export default function Order() {
               textForButton="список деталей для ручного раскроя"
               onClick={handleShowManualCutDetails}
             />
+
+            {cutQuality === 'bad' && (
+              <p className="col-span-full px-2 text-center [font-family:system-ui] text-[clamp(18px,5vw,26px)] font-black leading-tight text-[#ffb2a9]">
+                стоимость пересчитывается по итогу
+                ручного раскроя
+              </p>
+            )}
           </div>
         </section>
 

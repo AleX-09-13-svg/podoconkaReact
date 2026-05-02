@@ -103,15 +103,15 @@ export default function Catalog() {
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1 [font-family:system-ui] font-normal">
           <form
             onSubmit={handleCustomStoneSubmit}
-            className="grid min-h-[112px] grid-cols-[45%_1fr] overflow-hidden rounded-[2rem] border-2 border-[#d98328] bg-[#4f6370] text-left"
+            className="grid min-h-[148px] grid-cols-[40%_1fr] overflow-hidden rounded-[2rem] border-2 border-[#d98328] bg-[#4f6370] text-left sm:min-h-[132px] sm:grid-cols-[45%_1fr]"
           >
-            <div className="flex items-center justify-center rounded-[1.85rem] bg-white px-3 text-center text-[clamp(14px,4.2vw,20px)] leading-none font-semibold text-[#4f6370]">
+            <div className="flex min-h-full items-center justify-center rounded-[1.85rem] bg-white px-2 text-center text-[clamp(13px,3.8vw,20px)] leading-none font-semibold text-[#4f6370] sm:px-3">
               СВОЙ
               <br />
               КАМЕНЬ
             </div>
 
-            <div className="flex min-w-0 flex-col justify-center gap-2 px-3 py-3">
+            <div className="flex min-w-0 flex-col justify-center gap-1.5 px-2 py-3 sm:gap-2 sm:px-3">
               <label className="sr-only" htmlFor="custom-stone-name">
                 Название камня
               </label>
@@ -123,7 +123,7 @@ export default function Catalog() {
                   setCustomStoneName(event.target.value)
                 }
                 placeholder="Название камня"
-                className="h-9 w-full rounded-full bg-white px-3 text-[14px] leading-none text-[#526474] outline-none placeholder:text-[#526474]/55 focus:ring-2 focus:ring-[#d98328]"
+                className="h-8 w-full rounded-full bg-white px-3 text-[13px] leading-none text-[#526474] outline-none placeholder:text-[#526474]/55 focus:ring-2 focus:ring-[#d98328] sm:h-9 sm:text-[14px]"
               />
 
               <label className="sr-only" htmlFor="custom-stone-price">
@@ -138,12 +138,12 @@ export default function Catalog() {
                   setCustomStonePrice(event.target.value)
                 }
                 placeholder="Стоимость"
-                className="h-9 w-full rounded-full bg-white px-3 text-[14px] leading-none text-[#526474] outline-none placeholder:text-[#526474]/55 focus:ring-2 focus:ring-[#d98328]"
+                className="h-8 w-full rounded-full bg-white px-3 text-[13px] leading-none text-[#526474] outline-none placeholder:text-[#526474]/55 focus:ring-2 focus:ring-[#d98328] sm:h-9 sm:text-[14px]"
               />
 
               <button
                 type="submit"
-                className="h-8 rounded-full bg-[#d98328] px-3 text-[12px] leading-none font-semibold text-white transition-colors hover:bg-[#bf7627]"
+                className="h-8 shrink-0 rounded-full bg-[#d98328] px-3 text-[12px] leading-none font-semibold text-white transition-colors hover:bg-[#bf7627]"
               >
                 ВЫБРАТЬ
               </button>

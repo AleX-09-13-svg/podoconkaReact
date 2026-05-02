@@ -361,11 +361,6 @@ export default function OrderRequestForm({
           >
             Текст запроса
           </label>
-          {cutQuality === 'bad' && (
-            <p className="px-3 pb-2 text-[clamp(16px,4.4vw,24px)] font-bold leading-tight text-[#b4574b]">
-              {manualCutPriceText}
-            </p>
-          )}
           <textarea
             id="order-message"
             aria-invalid={Boolean(errors.message)}
