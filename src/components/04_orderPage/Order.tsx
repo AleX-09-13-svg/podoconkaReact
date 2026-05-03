@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import drawImage from '../../assets/draw.png'
 import { appPagePathByPage } from '../../config/appPageRoutes'
 import frameSizeConfig from '../../config/frameSizeConfig'
 import stoneCutConfig from '../../config/stoneCutConfig'
@@ -44,6 +46,8 @@ export default function Order() {
     showManualCutDetails,
     setShowManualCutDetails,
   ] = useState(false)
+  const [showDrawing, setShowDrawing] =
+    useState(false)
   const [cutQuality, setCutQuality] = useState<
     'good' | 'bad'
   >('good')
@@ -228,6 +232,13 @@ export default function Order() {
               onClick={handleShowManualCutDetails}
             />
 
+            <LandingActionButton
+              className="col-start-3 w-full min-w-0 bg-[#d6882e] px-2 py-2 shadow-none hover:bg-[#c77b28]"
+              innerClassName="min-h-[56px] px-2 py-2 text-[clamp(14px,4.5vw,20px)] font-semibold uppercase tracking-normal"
+              textForButton="чертеж"
+              onClick={() => setShowDrawing(true)}
+            />
+
             {cutQuality === 'bad' && (
               <p className="col-span-full px-2 text-center [font-family:system-ui] text-[clamp(18px,5vw,26px)] font-black leading-tight text-[#ffb2a9]">
                 стоимость пересчитывается по итогу
@@ -242,6 +253,37 @@ export default function Order() {
             result={cutResult}
             onClose={() => setShowCutLayout(false)}
           />
+        )}
+
+        {showDrawing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 [font-family:system-ui]">
+            <div className="flex max-h-[92vh] w-[min(94vw,860px)] flex-col overflow-hidden rounded-[1rem] bg-[#f7f4ef] shadow-[0_28px_80px_rgba(0,0,0,0.28)]">
+              <div className="flex items-center justify-between gap-4 border-b border-[#d8c9b8] px-4 py-3">
+                <h2 className="text-[18px] font-semibold leading-none text-[#526474]">
+                  Чертеж
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowDrawing(false)}
+                  aria-label="Закрыть чертеж"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#526474]/30 bg-white text-[#526474] transition-colors hover:bg-[#eee7df]"
+                >
+                  <X
+                    aria-hidden="true"
+                    className="h-5 w-5"
+                  />
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-auto p-4">
+                <img
+                  src={drawImage}
+                  alt="Чертеж подоконника"
+                  className="mx-auto max-h-[76vh] w-auto max-w-full rounded-[0.75rem] bg-white object-contain"
+                />
+              </div>
+            </div>
+          </div>
         )}
 
         {showManualCutDetails && (
