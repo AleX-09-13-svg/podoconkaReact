@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes } from 'react'
 import { cn } from '../../../lib/utils'
 
-type WithDataProps = Omit<
+type WidthDataProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'className'
 > & {
@@ -9,7 +9,7 @@ type WithDataProps = Omit<
   label?: string
 }
 
-export default function WithData({
+export default function WidthData({
   className,
   label = 'Ширина:',
   placeholder = '',
@@ -18,7 +18,7 @@ export default function WithData({
   type = 'text',
   name = 'width',
   ...inputProps
-}: WithDataProps) {
+}: WidthDataProps) {
   return (
     <label
       className={cn(

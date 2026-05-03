@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 
 import { appPagePathByPage } from '../../config/appPageRoutes'
 import frameSizeConfig from '../../config/frameSizeConfig'
+import stoneCutConfig from '../../config/stoneCutConfig'
 import { useAppData } from '../../context/AppDataContext'
 import {
   calculateStoneOrderCut,
   type CutCalculationResult,
-  type GuillotinePackingItem,
 } from '../../lib/guillotinePacking'
+import { buildOrderDetails } from '../../lib/orderDetails'
 import OverlayLayout from '../ui/OverlayLayout'
 import LandingActionButton from '../ui/LandingActionButton'
 import CutLayoutPreview from './components/CutLayoutPreview'
@@ -23,14 +24,6 @@ function getStoneDisplayName(name: string) {
   return grandexIndex >= 0
     ? name.slice(grandexIndex)
     : name
-}
-
-function getNumericValue(value: string) {
-  return value.replace(/[^\d.,]/g, '')
-}
-
-function getNumberValue(value: string) {
-  return Number(getNumericValue(value).replace(',', '.'))
 }
 
 function formatPrice(price: number) {
@@ -61,45 +54,19 @@ export default function Order() {
     addOrderItem,
     resetCalculatorForNextItem,
   } = useAppData()
-  const { length, width, thickness, count } =
-    calculatorFormValues
-  const hasSillDescription =
-    Boolean(length && width && thickness && count)
+  const {
+    hasCurrentSill,
+    currentSillDescription,
+    orderItemDescriptions,
+    cutItems,
+  } = buildOrderDetails({
+    calculatorFormValues,
+    orderItems,
+  })
 
   const stoneName = selectedStone
     ? getStoneDisplayName(selectedStone.name)
     : 'Камень не выбран'
-
-  const sillDescription =
-    length && width && thickness && count
-      ? `${getNumericValue(length)}x${getNumericValue(width)}x${getNumericValue(thickness)}-${getNumericValue(count)}`
-      : 'Параметры не заданы'
-
-  const orderItemDescriptions = orderItems.map(
-    (item) =>
-      `${getNumericValue(item.length)}x${getNumericValue(item.width)}x${getNumericValue(item.thickness)}-${getNumericValue(item.count)}`,
-  )
-
-  const cutItems: GuillotinePackingItem[] = [
-    ...(hasSillDescription
-      ? [
-          {
-            labelPrefix: '1.',
-            partLength: getNumberValue(length),
-            partWidth: getNumberValue(width),
-            count: getNumberValue(count),
-            edgeBandWidth: getNumberValue(thickness),
-          },
-        ]
-      : []),
-    ...orderItems.map((item, index) => ({
-      labelPrefix: `${index + (hasSillDescription ? 2 : 1)}.`,
-      partLength: getNumberValue(item.length),
-      partWidth: getNumberValue(item.width),
-      count: getNumberValue(item.count),
-      edgeBandWidth: getNumberValue(item.thickness),
-    })),
-  ]
 
   function calculateOrderCut() {
     if (!selectedStone) {
@@ -117,17 +84,7 @@ export default function Order() {
     const result = calculateStoneOrderCut({
       items: cutItems,
       pricePerSheet: selectedStone.pricePerSheet,
-      config: {
-        sheetLength: 3660,
-        sheetWidth: 750,
-        edgeGap: 10,
-        partGap: 5,
-        includeEdgeBands: true,
-        allowRotate: true,
-        preferMinimalUsedLength: true,
-        purchaseStepQuarters: 1,
-        maxQuarters: 40,
-      },
+      config: stoneCutConfig,
     })
 
     setCutResult(result)
@@ -162,7 +119,7 @@ export default function Order() {
   }
 
   function handleAddOrderItem() {
-    if (hasSillDescription) {
+    if (hasCurrentSill) {
       addOrderItem(calculatorFormValues)
       resetCalculatorForNextItem()
     }
@@ -195,9 +152,9 @@ export default function Order() {
                 Подоконник:
               </p>
               <p className="[font-family:system-ui] text-[clamp(13px,4vw,20px)] leading-tight text-[#e3932d]">
-                {hasSillDescription
-                  ? `1. ${sillDescription}`
-                  : sillDescription}
+                {hasCurrentSill
+                  ? `1. ${currentSillDescription}`
+                  : currentSillDescription}
               </p>
 
               {orderItemDescriptions.length > 0 && (
@@ -205,7 +162,7 @@ export default function Order() {
                   {orderItemDescriptions.map(
                     (description, index) => (
                       <p key={`${description}-${index}`}>
-                        {index + (hasSillDescription ? 2 : 1)}. {description}
+                        {index + (hasCurrentSill ? 2 : 1)}. {description}
                       </p>
                     ),
                   )}

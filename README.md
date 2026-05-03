@@ -85,6 +85,20 @@ Reusable starter for interface-heavy React projects built with Vite, TypeScript,
 - `vite.config.ts` - плагины Vite и алиас `@`
 - `components.json` - алиасы и конфигурация генератора shadcn/ui
 
+## Как устроен проект
+
+- `src/components/01_homePage` - главная страница лендинга.
+- `src/components/02_calculatorPage` - форма ввода размеров подоконника.
+- `src/components/03_stoneCatalog` - каталог камней и выбор пользовательского камня.
+- `src/components/04_orderPage` - страница заказа, расчет стоимости, раскрой, список деталей и форма заявки.
+- `src/context/AppDataContext.tsx` - общее состояние: выбранный камень, текущая форма калькулятора и добавленные позиции заказа.
+- `src/lib/orderDetails.ts` - подготовка описаний заказа и деталей для раскроя.
+- `src/lib/guillotinePacking.ts` - логика раскроя, подсчет четвертей листа и итоговой цены.
+- `src/config/stoneCutConfig.ts` - изменяемые параметры листа и раскроя.
+- `src/config/stonePricingConfig.ts` - изменяемые параметры ценообразования.
+- `src/data/stones.json` - данные каталога камней: название, цена листа и изображение.
+- `public/robots.txt`, `public/sitemap.xml`, `netlify.toml` - файлы для SEO и деплоя на Netlify.
+
 ## Чеклист для переиспользования
 
 1. Скопируйте проект или создайте из него новый репозиторий.

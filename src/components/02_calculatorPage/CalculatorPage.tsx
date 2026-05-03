@@ -11,7 +11,7 @@ import { useAppData } from '../../context/AppDataContext'
 import type { CalculatorFormValues } from '../../types/calculator'
 import OverlayLayout from '../ui/OverlayLayout'
 import LengthData from './components/LengthData'
-import WithData from './components/WithData'
+import WidthData from './components/WidthData'
 import Thickness from './components/Thickness'
 import StoneData from './components/StoneData'
 import CountData from './components/CountData'
@@ -108,7 +108,7 @@ export default function Calculator() {
           aria-invalid={Boolean(errors.length)}
           {...register('length', numberRules)}
         />
-        <WithData
+        <WidthData
           type="text"
           inputMode="decimal"
           aria-invalid={Boolean(errors.width)}

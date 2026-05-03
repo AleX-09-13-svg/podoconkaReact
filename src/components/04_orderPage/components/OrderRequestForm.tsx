@@ -7,11 +7,10 @@ import {
   useForm,
 } from 'react-hook-form'
 
+import stoneCutConfig from '../../../config/stoneCutConfig'
 import { useAppData } from '../../../context/AppDataContext'
-import {
-  calculateStoneOrderCut,
-  type GuillotinePackingItem,
-} from '../../../lib/guillotinePacking'
+import { calculateStoneOrderCut } from '../../../lib/guillotinePacking'
+import { buildOrderDetails } from '../../../lib/orderDetails'
 import { cn } from '../../../lib/utils'
 import LandingActionButton from '../../ui/LandingActionButton'
 
@@ -71,14 +70,6 @@ function getStoneDisplayName(name: string) {
     : name
 }
 
-function getNumericValue(value: string) {
-  return value.replace(/[^\d.,]/g, '')
-}
-
-function getNumberValue(value: string) {
-  return Number(getNumericValue(value).replace(',', '.'))
-}
-
 function formatPrice(price: number) {
   return new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: 0,
@@ -100,8 +91,6 @@ export default function OrderRequestForm({
     calculatorFormValues,
     orderItems,
   } = useAppData()
-  const { length, width, thickness, count } =
-    calculatorFormValues
   const serviceId = import.meta.env
     .VITE_EMAILJS_SERVICE_ID
   const templateId = import.meta.env
@@ -109,52 +98,11 @@ export default function OrderRequestForm({
   const publicKey = import.meta.env
     .VITE_EMAILJS_PUBLIC_KEY
   const defaultMessage = useMemo(() => {
-    const hasCurrentSill =
-      length && width && thickness && count
-    const sillDescriptions = [
-      ...(hasCurrentSill
-        ? [
-            `${getNumericValue(length)}x${getNumericValue(width)}x${getNumericValue(thickness)}-${getNumericValue(count)} шт.`,
-          ]
-        : []),
-      ...orderItems.map(
-        (item) =>
-          `${getNumericValue(item.length)}x${getNumericValue(item.width)}x${getNumericValue(item.thickness)}-${getNumericValue(item.count)} шт.`,
-      ),
-    ]
-    const cutItems: GuillotinePackingItem[] = [
-      ...(hasCurrentSill
-        ? [
-            {
-              labelPrefix: '1.',
-              partLength: getNumberValue(length),
-              partWidth: getNumberValue(width),
-              count: getNumberValue(count),
-              edgeBandWidth: getNumberValue(thickness),
-            },
-          ]
-        : []),
-      ...orderItems.map((item, index) => ({
-        labelPrefix: `${index + (hasCurrentSill ? 2 : 1)}.`,
-        partLength: getNumberValue(item.length),
-        partWidth: getNumberValue(item.width),
-        count: getNumberValue(item.count),
-        edgeBandWidth: getNumberValue(item.thickness),
-      })),
-    ]
-    const sillDescription =
-      length && width && thickness && count
-        ? `${getNumericValue(length)}x${getNumericValue(width)}x${getNumericValue(thickness)}-${getNumericValue(count)} шт.`
-        : 'параметры не заданы'
-    const requestSillDescription =
-      sillDescriptions.length
-        ? sillDescriptions
-            .map(
-              (description, index) =>
-                `${index + 1}. ${description}`,
-            )
-            .join('; ')
-        : sillDescription
+    const { cutItems, requestSillDescription } =
+      buildOrderDetails({
+        calculatorFormValues,
+        orderItems,
+      })
     const stoneName = selectedStone
       ? getStoneDisplayName(selectedStone.name)
       : 'камень не выбран'
@@ -163,17 +111,7 @@ export default function OrderRequestForm({
         ? calculateStoneOrderCut({
             items: cutItems,
             pricePerSheet: selectedStone.pricePerSheet,
-            config: {
-              sheetLength: 3660,
-              sheetWidth: 750,
-              edgeGap: 10,
-              partGap: 5,
-              includeEdgeBands: true,
-              allowRotate: true,
-              preferMinimalUsedLength: true,
-              purchaseStepQuarters: 1,
-              maxQuarters: 40,
-            },
+            config: stoneCutConfig,
           })
         : null
     const priceText = result
@@ -186,13 +124,10 @@ export default function OrderRequestForm({
 
     return `Прошу выставить счет на подоконники ${requestSillDescription}. ${stoneName} ${priceText}${manualCutPriceNote}`
   }, [
-    count,
+    calculatorFormValues,
     cutQuality,
-    length,
     orderItems,
     selectedStone,
-    thickness,
-    width,
   ])
 
   const {
