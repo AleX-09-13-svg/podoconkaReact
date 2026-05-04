@@ -204,7 +204,7 @@ export default function Order() {
               onClick={handleShowCutLayout}
             />
 
-            <span className="text-center [font-family:system-ui] text-[clamp(26px,7vw,40px)] font-black leading-none text-white">
+            <span className="text-center [font-family:system-ui] text-[clamp(26px,7vw,40px)] font-black leading-none text-red-500">
               =
             </span>
 
