@@ -1,4 +1,4 @@
-import { StrictMode } from 'react' // Режим повышенной внимательности,для нахождения потенциальных проблем приложения
+import { StrictMode } from 'react' // рекомендуемая обертка, которая помогает находить потенциальные проблемы в React-приложении.
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'

@@ -106,7 +106,8 @@ export default function Order() {
   }
 
   function handleShowCutLayout() {
-    const result = cutResult ?? calculateOrderCut()
+    const result =
+      cutResult ?? calculateOrderCut()
 
     if (result) {
       setShowCutLayout(true)
@@ -132,27 +133,29 @@ export default function Order() {
   }
 
   return (
-    <OverlayLayout frame={frameSizeConfig.orderPage}>
-      <div className="col-[1/5] row-[1/7] flex h-full flex-col px-5 pb-8 pt-7">
+    <OverlayLayout
+      frame={frameSizeConfig.orderPage}
+    >
+      <div className="col-[1/5] row-[1/7] flex h-full flex-col px-5 pt-7 pb-8">
         <section className="relative px-0 text-white">
           <div className="pr-20">
-            <h2 className="text-[clamp(28px,8vw,44px)] font-black uppercase leading-none tracking-[0.03em]">
+            <h2 className="text-[clamp(28px,8vw,44px)] leading-none font-black tracking-[0.03em] uppercase">
               Вы выбрали
             </h2>
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-x-5 gap-y-4">
             <div className="space-y-2">
-              <p className="text-[clamp(16px,5vw,24px)] font-black uppercase leading-none">
+              <p className="text-[clamp(16px,5vw,24px)] leading-none font-black uppercase">
                 Камень:
               </p>
-              <p className="[font-family:system-ui] text-[clamp(13px,4vw,20px)] uppercase leading-tight text-[#e3932d]">
+              <p className="[font-family:system-ui] text-[clamp(13px,4vw,20px)] leading-tight text-[#e3932d] uppercase">
                 {stoneName}
               </p>
             </div>
 
             <div className="space-y-2">
-              <p className="text-[clamp(16px,5vw,24px)] font-black uppercase leading-none">
+              <p className="text-[clamp(16px,5vw,24px)] leading-none font-black uppercase">
                 Подоконник:
               </p>
               <p className="[font-family:system-ui] text-[clamp(13px,4vw,20px)] leading-tight text-[#e3932d]">
@@ -161,12 +164,19 @@ export default function Order() {
                   : currentSillDescription}
               </p>
 
-              {orderItemDescriptions.length > 0 && (
+              {orderItemDescriptions.length >
+                0 && (
                 <div className="space-y-1 pt-1 [font-family:system-ui] text-[clamp(13px,4vw,20px)] leading-tight text-[#e3932d]">
                   {orderItemDescriptions.map(
                     (description, index) => (
-                      <p key={`${description}-${index}`}>
-                        {index + (hasCurrentSill ? 2 : 1)}. {description}
+                      <p
+                        key={`${description}-${index}`}
+                      >
+                        {index +
+                          (hasCurrentSill
+                            ? 2
+                            : 1)}
+                        . {description}
                       </p>
                     ),
                   )}
@@ -189,7 +199,7 @@ export default function Order() {
             onClick={handleCalculatePrice}
           />
 
-          <p className="mt-5 text-center text-[clamp(16px,5vw,24px)] font-black uppercase leading-none">
+          <p className="mt-5 text-center text-[clamp(16px,5vw,24px)] leading-none font-black uppercase">
             {calculationError ||
               (cutResult
                 ? `${formatPrice(cutResult.totalPrice)} руб.`
@@ -204,7 +214,7 @@ export default function Order() {
               onClick={handleShowCutLayout}
             />
 
-            <span className="text-center [font-family:system-ui] text-[clamp(26px,7vw,40px)] font-black leading-none text-red-500">
+            <span className="text-center [font-family:system-ui] text-[clamp(26px,7vw,40px)] leading-none font-black text-red-500">
               =
             </span>
 
@@ -240,7 +250,7 @@ export default function Order() {
             />
 
             {cutQuality === 'bad' && (
-              <p className="col-span-full px-2 text-center [font-family:system-ui] text-[clamp(18px,5vw,26px)] font-black leading-tight text-[#ffb2a9]">
+              <p className="col-span-full px-2 text-center [font-family:system-ui] text-[clamp(18px,5vw,26px)] leading-tight font-black text-[#ffb2a9]">
                 стоимость пересчитывается по итогу
                 ручного раскроя
               </p>
@@ -251,7 +261,9 @@ export default function Order() {
         {showCutLayout && cutResult && (
           <CutLayoutPreview
             result={cutResult}
-            onClose={() => setShowCutLayout(false)}
+            onClose={() =>
+              setShowCutLayout(false)
+            }
           />
         )}
 
@@ -259,12 +271,14 @@ export default function Order() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 [font-family:system-ui]">
             <div className="flex max-h-[92vh] w-[min(94vw,860px)] flex-col overflow-hidden rounded-[1rem] bg-[#f7f4ef] shadow-[0_28px_80px_rgba(0,0,0,0.28)]">
               <div className="flex items-center justify-between gap-4 border-b border-[#d8c9b8] px-4 py-3">
-                <h2 className="text-[18px] font-semibold leading-none text-[#526474]">
+                <h2 className="text-[18px] leading-none font-semibold text-[#526474]">
                   Чертеж
                 </h2>
                 <button
                   type="button"
-                  onClick={() => setShowDrawing(false)}
+                  onClick={() =>
+                    setShowDrawing(false)
+                  }
                   aria-label="Закрыть чертеж"
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#526474]/30 bg-white text-[#526474] transition-colors hover:bg-[#eee7df]"
                 >
@@ -296,7 +310,7 @@ export default function Order() {
         )}
 
         <section className="flex flex-1 flex-col pt-12">
-          <h1 className="text-center text-[clamp(28px,8vw,44px)] font-black uppercase tracking-[0.04em] text-[#6b7d8d]">
+          <h1 className="text-center text-[clamp(28px,8vw,44px)] font-black tracking-[0.04em] text-[#6b7d8d] uppercase">
             Оформить заказ
           </h1>
 
